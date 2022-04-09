@@ -1,3 +1,4 @@
+import json
 import artifacts_keeper
 
 ATTR_COUNT = 7
@@ -5,9 +6,16 @@ PACK_FIELD_BITSIZE = 5
 PACK_FIELD_MASK = (1 << PACK_FIELD_BITSIZE) - 1
 
 
-def unpack_genome(str):
+class GenomeData:
+    def __init__(self):
+        self.rerolled = False
+        self.category_id = 0
+        self.options = []
+
+
+def _unpack_genome(str):
     num = int(str)
-    result = {}
+    result = GenomeData()
 
     # get reroll flag
     result.rerolled = num & 0b1
@@ -25,7 +33,7 @@ def unpack_genome(str):
     return result
 
 
-def category_description(category_id):
+def _category_description(category_id):
     if category_id == 1:
         description = 'The category includes 4,500 photos. It’s focused on not related to time or place everyday moments of Alvara’s life. Generally, she led a quiet, measured life at that time, so she was dressed in the typical clothes of that time and place.'
     elif category_id == 2:
@@ -41,24 +49,37 @@ def category_description(category_id):
     return description
 
 
-def read_settings(path):
-    pass
+def _read_settings(path):
+    f = open(path, 'r')
+    settings = json.load(f)
+    f.close()
+    return settings
 
 
-def attributes_set(info, settings):
-    pass
+def _attributes_set(info, settings):
+    result = {}
+    cat_name = settings['categories'][info.category_id]['name']
+    result.append = {
+        "trait_type": "category",
+        "value": cat_name
+    }
+    attributes = settings['categories'][info.category_id]['attributes']
+    for i in range(0, len(info.options)):
+        result.append = {
+            "trait_type": attributes[i]['name'],
+            "value": attributes[i]['options'][info.options[i]]['name']
+        }
+    return result
 
 
-def metadata_json(info, image_path, high_resolution_path, settings):
+def _metadata_json(info, image_path, high_resolution_path, settings):
     return {
-        'description': category_description(info.category_id),
+        'description': _category_description(info.category_id),
         'image': image_path,
         'external_url': high_resolution_path,
         'name': 'Alvara',
-        'attributes': []
+        'attributes': _attributes_set(info, settings)
     }
-
-
 
 
 def meta(num):

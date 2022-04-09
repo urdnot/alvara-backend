@@ -1,8 +1,11 @@
 import meta_generator as gen
 
+SETTINGS_PATH = "settings.json"
+
 
 def main():
-    print(gen.meta('lsdfj'))
+    st = gen._settings(SETTINGS_PATH)
+    print(st)
 
 
 if __name__ == '__main__':

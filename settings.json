@@ -3,7 +3,8 @@
   "categories": [
     {
       "name": "cool",
-      "size": 0
+      "size": 0,
+      "attributes": []
     },
     {
       "name": "hot",
@@ -83,15 +84,18 @@
     },
     {
       "name": "glorious",
-      "size": 0
+      "size": 0,
+      "attributes": []
     },
     {
       "name": "terrific",
-      "size": 0
+      "size": 0,
+      "attributes": []
     },
     {
       "name": "divine",
-      "size": 0
+      "size": 0,
+      "attributes": []
     }
   ]
 }
