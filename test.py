@@ -4,9 +4,8 @@ SETTINGS_PATH = "settings.json"
 
 
 def main():
-    st = gen._settings(SETTINGS_PATH)
-    print(st)
-
+    res = gen.meta(1)
+    print(res)
 
 if __name__ == '__main__':
     main()

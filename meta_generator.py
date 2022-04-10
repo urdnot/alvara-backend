@@ -1,21 +1,22 @@
 import json
-import artifacts_keeper
+import artifacts_keeper as keeper
+
 
 ATTR_COUNT = 7
 PACK_FIELD_BITSIZE = 5
 PACK_FIELD_MASK = (1 << PACK_FIELD_BITSIZE) - 1
 
 
-class GenomeData:
+class TokenData:
     def __init__(self):
         self.rerolled = False
         self.category_id = 0
         self.options = []
 
 
-def _unpack_genome(str):
+def _unpack_token_data(str):
     num = int(str)
-    result = GenomeData()
+    result = TokenData()
 
     # get reroll flag
     result.rerolled = num & 0b1
@@ -57,32 +58,50 @@ def _read_settings(path):
 
 
 def _attributes_set(info, settings):
-    result = {}
+    result = []
     cat_name = settings['categories'][info.category_id]['name']
-    result.append = {
+    result.append({
         "trait_type": "category",
         "value": cat_name
-    }
+    })
     attributes = settings['categories'][info.category_id]['attributes']
     for i in range(0, len(info.options)):
-        result.append = {
+        result.append({
             "trait_type": attributes[i]['name'],
             "value": attributes[i]['options'][info.options[i]]['name']
-        }
+        })
     return result
 
 
-def _metadata_json(info, image_path, high_resolution_path, settings):
+def _metadata_json(data, image_path, high_resolution_path, settings):
     return {
-        'description': _category_description(info.category_id),
+        'description': _category_description(data.category_id),
         'image': image_path,
         'external_url': high_resolution_path,
         'name': 'Alvara',
-        'attributes': _attributes_set(info, settings)
+        'attributes': _attributes_set(data, settings)
     }
 
 
+def _ask_smart_for_token_data(num):
+    return ""
+
+
 def meta(num):
-    # Ask smart contract about token 'num'
-    # call getData(num) of smart contract, and receive 'genome_str'
-    pass
+    # check is token image/meta exist
+    # if not keeper.token_exist(num):
+    #     # Ask smart contract about token 'num'
+    #     # call getData(num) of smart contract, and receive 'genome_str'
+    #     data_str = _ask_smart_for_token_data(num)
+    #     data = _unpack_token_data(data_str)
+    #     keeper.create(data)
+    #
+    # image_path = keeper.path_to_image(num)
+    # high_image_path = keeper.path_to_high_image(num)
+    # return _metadata_json(data, image_path, high_image_path, )
+    data = TokenData()
+    data.category_id = 1
+    data.rerolled = 0
+    data.options = [1,0,3,2,2,1,3]
+    settings = _read_settings("settings.json")
+    return _metadata_json(data, "asd", "asd", settings)
