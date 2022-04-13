@@ -64,7 +64,7 @@
             { "pics": [ { "path": "bdsm.png", "z": 30 } ], "name": "BDSM" },
             { "pics": [ { "path": "black_widow.png", "z": 30 } ], "name": "Black widow" },
             { "pics": [ { "path": "princess_leia.png", "z": 30 } ], "name": "Princess Leia" },
-            { "pics": [ { "path": "stawberry_ice_cream.png", "z": 30 } ], "name": "Straberry ice cream" },
+            { "pics": [ { "path": "strawberry_ice_cream.png", "z": 30 } ], "name": "Strawberry_ice_cream" },
             { "pics": [ { "path": "well_protected.png", "z": 30 } ], "name": "Well protected" }
           ]
         },
