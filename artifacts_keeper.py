@@ -43,15 +43,15 @@ class ArtifactsKeeper:
         return mixer.mix(layers, self.path_to_image(data.token_id))
 
     def create_meta(self, token_id, content):
-        with open(self.path_to_meta(token_id), 'wb') as out:
-            out.write(content)
+        with open(self.path_to_meta(token_id), 'w') as out:
+            json.dump(content, out)
 
     def path_to_meta(self, token_id):
         return self.ARTIFACTS_DIRECTORY + "meta/" + str(token_id) + ".json"
 
     def meta_content(self, token_id):
-        with open(self.path_to_meta(token_id), 'rb') as file:
-            return file.read()
+        with open(self.path_to_meta(token_id), 'r') as file:
+            return json.load(file)
 
     def path_to_image(self, token_id):
         return self.ARTIFACTS_DIRECTORY + "normal/" + str(token_id) + ".png"

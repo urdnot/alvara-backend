@@ -93,9 +93,6 @@ class MetaGenerator:
     def _ask_smart_for_token_data(self, num):
         return str(self.___temp_gen_pack())
 
-    def _str_to_bytes(self, str):
-        return bytes(str, 'utf-8')
-
     def meta(self, token_id):
         # check is token image/meta exist
         if not self.keeper.token_exist(token_id):
@@ -104,8 +101,7 @@ class MetaGenerator:
             data_str = self._ask_smart_for_token_data(token_id)
             data = self._unpack_token_data(data_str, token_id)
             normal = self.keeper.create_images(data)
-            meta = self._metadata_json(data, normal)
-            content = self._str_to_bytes(json.dumps(meta))
+            content = self._metadata_json(data, normal)
             self.keeper.create_meta(token_id, content)
         else:
             content = self.keeper.meta_content(token_id)
