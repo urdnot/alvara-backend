@@ -1,7 +1,6 @@
-import json
-
 # TODO: should be deleted
 import random
+import token_state
 
 
 class MetaGenerator:
@@ -9,8 +8,9 @@ class MetaGenerator:
     PACK_FIELD_BITSIZE = 5
     PACK_FIELD_MASK = (1 << PACK_FIELD_BITSIZE) - 1
 
-    def __init__(self, keeper):
+    def __init__(self, keeper, state):
         self.keeper = keeper
+        self.state = state
 
     class TokenData:
         def __init__(self):
@@ -94,15 +94,30 @@ class MetaGenerator:
         return str(self.___temp_gen_pack())
 
     def meta(self, token_id):
-        # check is token image/meta exist
-        if not self.keeper.token_exist(token_id):
-            # Ask smart contract about token 'num'
-            # call getData(num) of smart contract, and receive 'genome_str'
-            data_str = self._ask_smart_for_token_data(token_id)
-            data = self._unpack_token_data(data_str, token_id)
-            normal = self.keeper.create_images(data)
-            content = self._metadata_json(data, normal)
-            self.keeper.create_meta(token_id, content)
-        else:
-            content = self.keeper.meta_content(token_id)
-        return content
+        async with self.state.locks[token_id]:
+            if self.state.tokens[token_id].state == token_state.TokenState.Token.NOT_EXIST:
+                # Ask smart contract about token 'token_id'
+                # call getData(num) of smart contract, and receive 'genome_str'
+                self.state.tokens[token_id].data = self._ask_smart_for_token_data(token_id)
+                unpacked_data = self._unpack_token_data(self.state.tokens[token_id].data, token_id)
+                self.state.tokens[token_id].state = token_state.TokenState.Token.NOT_REROLLED if unpacked_data.rerolled == 0 else token_state.TokenState.Token.REROLLED
+                normal = self.keeper.create_images(unpacked_data)
+                content = self._metadata_json(unpacked_data, normal)
+                self.keeper.create_meta(token_id, content)
+                self.state.dump_token_state(token_id)
+            elif self.state.tokens[token_id].state == token_state.TokenState.Token.NOT_REROLLED:
+                # Ask smart contract about token 'token_id'
+                # call getData(num) of smart contract, and receive 'genome_str'
+                data_str = self._ask_smart_for_token_data(token_id)
+                if data_str != self.state.tokens[token_id].data:
+                    data = self._unpack_token_data(data_str, token_id)
+                    self.state.tokens[token_id].state = token_state.TokenState.Token.REROLLED
+                    normal = self.keeper.create_images(data)
+                    content = self._metadata_json(data, normal)
+                    self.keeper.create_meta(token_id, content)
+                    self.state.dump_token_state(token_id)
+                else:
+                    content = self.keeper.meta_content(token_id)
+            elif self.state.tokens[token_id].state == token_state.TokenState.Token.REROLLED:
+                content = self.keeper.meta_content(token_id)
+            return content

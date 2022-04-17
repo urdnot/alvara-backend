@@ -1,6 +1,7 @@
 import os
 import image_mixer as mixer
 import json
+import utils
 
 
 class ArtifactsKeeper:
@@ -8,13 +9,9 @@ class ArtifactsKeeper:
         self.ARTIFACTS_DIRECTORY = artifacts_directory
         self.settings = self._read_json(settings_path)
         self._make_full_pathes()
-        self._create_if_not_exist(artifacts_directory)
-        self._create_if_not_exist(artifacts_directory + "/normal")
-        self._create_if_not_exist(artifacts_directory + "/meta")
-
-    def _create_if_not_exist(self, path):
-        if not os.path.exists(path):
-            os.mkdir(path)
+        utils.create_dir_if_not_exist(artifacts_directory)
+        utils.create_dir_if_not_exist(artifacts_directory + "/normal")
+        utils.create_dir_if_not_exist(artifacts_directory + "/meta")
 
     def _make_full_pathes(self):
         assets = self.settings['assets_path']
