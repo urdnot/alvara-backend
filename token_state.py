@@ -18,20 +18,22 @@ class TokenState:
             self.data = None
 
     def __init__(self, state_dir, size):
-        self.dir = state_dir + "/"
+        self.dir = state_dir
         utils.create_dir_if_not_exist(self.dir)
         self.size = size
-        self.locks = [asyncio.Lock()] * size
+        self.locks = []
+        for i in range(0, size):
+            self.locks.append(asyncio.Lock())
         self.tokens = [self.Token()] * size
         self._load_state()
         self._clear_garbage()
 
     def _clear_garbage(self):
-        for item in os.scandir():
+        for item in os.scandir(self.dir):
             if not item.is_file():
                 continue
             if not self.state_file_rx.match(item.name):
-                os.remove(item.name)
+                os.remove(item.path)
 
     def _load_state(self):
         for i in range(1, self.size + 1):

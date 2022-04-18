@@ -93,8 +93,10 @@ class MetaGenerator:
     def _ask_smart_for_token_data(self, num):
         return str(self.___temp_gen_pack())
 
-    def meta(self, token_id):
-        async with self.state.locks[token_id]:
+    async def meta(self, token_id):
+        content = None
+        await self.state.locks[token_id].acquire()
+        try:
             if self.state.tokens[token_id].state == token_state.TokenState.Token.NOT_EXIST:
                 # Ask smart contract about token 'token_id'
                 # call getData(num) of smart contract, and receive 'genome_str'
@@ -120,4 +122,6 @@ class MetaGenerator:
                     content = self.keeper.meta_content(token_id)
             elif self.state.tokens[token_id].state == token_state.TokenState.Token.REROLLED:
                 content = self.keeper.meta_content(token_id)
-            return content
+        finally:
+            self.state.locks[token_id].release()
+        return content
