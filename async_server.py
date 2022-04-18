@@ -14,7 +14,7 @@ class Server:
     ETH_NODE_URL = "http://127.0.0.1:8545"
     SMART_CONTRACT_ADDRESS = "0xCfEB869F69431e42cdB54A4F4f105C19C080A601"
     STATE_DIR = "state/"
-    COLLECTION_SIZE = 10
+    COLLECTION_SIZE = 10000
 
     def __init__(self):
         self.keeper = artifacts_keeper.ArtifactsKeeper(self.ARTIFACTS_DIRECTORY, self.SETTINGS_PATH)

@@ -22,9 +22,10 @@ class TokenState:
         utils.create_dir_if_not_exist(self.dir)
         self.size = size
         self.locks = []
+        self.tokens = []
         for i in range(0, size):
             self.locks.append(asyncio.Lock())
-        self.tokens = [self.Token()] * size
+            self.tokens.append(self.Token())
         self._load_state()
         self._clear_garbage()
 
@@ -36,15 +37,17 @@ class TokenState:
                 os.remove(item.path)
 
     def _load_state(self):
-        for i in range(1, self.size + 1):
-            path = self.dir + str(i)
+        for i in range(0, self.size):
+            path = self.dir + str(i + 1)
             if os.path.exists(path):
                 with open(path) as f:
                     content = json.load(f)
                 self.tokens[i].state = content['state']
+                self.tokens[i].data = content['data']
 
-    def dump_token_state(self, id, data_str):
+    def dump_token_state(self, id):
+        internal_id = id - 1
         utils.save_safely({
-            'state': self.tokens[id].state,
-            'data': data_str
+            'state': self.tokens[internal_id].state,
+            'data': self.tokens[internal_id].data
         }, self.dir + str(id))

@@ -1,4 +1,6 @@
 from PIL import Image
+import os
+import utils
 
 
 def _sort_layers(layers):

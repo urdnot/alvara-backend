@@ -13,10 +13,10 @@ def temp_name():
     return 'temp-{0:06d}'.format(solt)
 
 
-async def save_safely(content, path):
+def save_safely(content, path):
     # save content to file with temp random name and then rename it
     temp = temp_name()
-    with open(temp) as f:
+    with open(temp, "w") as f:
         json.dump(content, f)
     if os.path.exists(path):
         os.remove(path)

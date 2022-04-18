@@ -95,33 +95,35 @@ class MetaGenerator:
 
     async def meta(self, token_id):
         content = None
-        await self.state.locks[token_id].acquire()
+        internal_id = token_id - 1
+        await self.state.locks[internal_id].acquire()
         try:
-            if self.state.tokens[token_id].state == token_state.TokenState.Token.NOT_EXIST:
+            if self.state.tokens[internal_id].state == token_state.TokenState.Token.NOT_EXIST:
                 # Ask smart contract about token 'token_id'
                 # call getData(num) of smart contract, and receive 'genome_str'
-                self.state.tokens[token_id].data = self._ask_smart_for_token_data(token_id)
-                unpacked_data = self._unpack_token_data(self.state.tokens[token_id].data, token_id)
-                self.state.tokens[token_id].state = token_state.TokenState.Token.NOT_REROLLED if unpacked_data.rerolled == 0 else token_state.TokenState.Token.REROLLED
+                self.state.tokens[internal_id].data = self._ask_smart_for_token_data(token_id)
+                unpacked_data = self._unpack_token_data(self.state.tokens[internal_id].data, token_id)
+                self.state.tokens[internal_id].state = token_state.TokenState.Token.NOT_REROLLED if unpacked_data.rerolled == 0 else token_state.TokenState.Token.REROLLED
                 normal = self.keeper.create_images(unpacked_data)
                 content = self._metadata_json(unpacked_data, normal)
                 self.keeper.create_meta(token_id, content)
                 self.state.dump_token_state(token_id)
-            elif self.state.tokens[token_id].state == token_state.TokenState.Token.NOT_REROLLED:
+            elif self.state.tokens[internal_id].state == token_state.TokenState.Token.NOT_REROLLED:
                 # Ask smart contract about token 'token_id'
                 # call getData(num) of smart contract, and receive 'genome_str'
                 data_str = self._ask_smart_for_token_data(token_id)
                 if data_str != self.state.tokens[token_id].data:
+                    self.state.tokens[internal_id].data = data_str
                     data = self._unpack_token_data(data_str, token_id)
-                    self.state.tokens[token_id].state = token_state.TokenState.Token.REROLLED
+                    self.state.tokens[internal_id].state = token_state.TokenState.Token.REROLLED
                     normal = self.keeper.create_images(data)
                     content = self._metadata_json(data, normal)
                     self.keeper.create_meta(token_id, content)
                     self.state.dump_token_state(token_id)
                 else:
                     content = self.keeper.meta_content(token_id)
-            elif self.state.tokens[token_id].state == token_state.TokenState.Token.REROLLED:
+            elif self.state.tokens[internal_id].state == token_state.TokenState.Token.REROLLED:
                 content = self.keeper.meta_content(token_id)
         finally:
-            self.state.locks[token_id].release()
+            self.state.locks[internal_id].release()
         return content
