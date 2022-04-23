@@ -19,7 +19,7 @@ class Server:
     def __init__(self):
         self.keeper = artifacts_keeper.ArtifactsKeeper(self.ARTIFACTS_DIRECTORY, self.SETTINGS_PATH)
         self.smart = smart_client.SmartContract(self.ETH_NODE_URL, self.SMART_CONTRACT_ADDRESS)
-        self.state = token_state.TokenState(self.STATE_DIR, self.COLLECTION_SIZE)
+        self.state = token_state.TokenState(self.ARTIFACTS_DIRECTORY + self.STATE_DIR, self.COLLECTION_SIZE)
         self.gen = meta_generator.MetaGenerator(self.keeper, self.state)
         self.app = web.Application()
         self.app.add_routes([web.get('/', self.default),

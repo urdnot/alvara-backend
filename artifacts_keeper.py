@@ -5,13 +5,13 @@ import utils
 
 
 class ArtifactsKeeper:
-    def __init__(self, artifacts_directory, settings_path):
-        self.ARTIFACTS_DIRECTORY = artifacts_directory
+    def __init__(self, directory, settings_path):
+        self.DIRECTORY = directory
         self.settings = self._read_json(settings_path)
         self._make_full_pathes()
-        utils.create_dir_if_not_exist(artifacts_directory)
-        utils.create_dir_if_not_exist(artifacts_directory + "/normal")
-        utils.create_dir_if_not_exist(artifacts_directory + "/meta")
+        utils.create_dir_if_not_exist(directory)
+        utils.create_dir_if_not_exist(directory + "/normal")
+        utils.create_dir_if_not_exist(directory + "/meta")
 
     def _make_full_pathes(self):
         assets = self.settings['assets_path']
@@ -44,14 +44,14 @@ class ArtifactsKeeper:
             json.dump(content, out)
 
     def path_to_meta(self, token_id):
-        return self.ARTIFACTS_DIRECTORY + "meta/" + str(token_id) + ".json"
+        return self.DIRECTORY + "meta/" + str(token_id) + ".json"
 
     def meta_content(self, token_id):
         with open(self.path_to_meta(token_id), 'r') as file:
             return json.load(file)
 
     def path_to_image(self, token_id):
-        return self.ARTIFACTS_DIRECTORY + "normal/" + str(token_id) + ".png"
+        return self.DIRECTORY + "normal/" + str(token_id) + ".png"
 
     def image_content(self, token_id):
         with open(self.path_to_image(token_id), 'rb') as file:
