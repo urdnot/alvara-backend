@@ -21,3 +21,17 @@ def save_safely(content, path):
     if os.path.exists(path):
         os.remove(path)
     os.rename(temp, path)
+
+
+def rename_safely(src, dst):
+    if os.path.exists(dst):
+        os.remove(dst)
+    os.rename(src, dst)
+
+
+def clear_garbage(directory, rx):
+    for item in os.scandir(directory):
+        if not item.is_file():
+            continue
+        if not rx.match(item.name):
+            os.remove(item.path)

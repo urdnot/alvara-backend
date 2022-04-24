@@ -6,7 +6,7 @@ import utils
 
 
 class TokenState:
-    state_file_rx = re.compile("^[1-9][0-9]*$")
+    STATE_FILE_RX = re.compile("^[1-9][0-9]*$")
 
     class Token:
         NOT_EXIST = 1
@@ -27,14 +27,7 @@ class TokenState:
             self.locks.append(asyncio.Lock())
             self.tokens.append(self.Token())
         self._load_state()
-        self._clear_garbage()
-
-    def _clear_garbage(self):
-        for item in os.scandir(self.dir):
-            if not item.is_file():
-                continue
-            if not self.state_file_rx.match(item.name):
-                os.remove(item.path)
+        utils.clear_garbage(self.dir, self.STATE_FILE_RX)
 
     def _load_state(self):
         for i in range(0, self.size):
@@ -45,9 +38,9 @@ class TokenState:
                 self.tokens[i].state = content['state']
                 self.tokens[i].data = content['data']
 
-    def dump_token_state(self, id):
-        internal_id = id - 1
+    def dump_token_state(self, token_id):
+        internal_id = token_id - 1
         utils.save_safely({
             'state': self.tokens[internal_id].state,
             'data': self.tokens[internal_id].data
-        }, self.dir + str(id))
+        }, self.dir + str(token_id))

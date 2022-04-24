@@ -7,10 +7,13 @@ class MetaGenerator:
     ATTR_COUNT = 7
     PACK_FIELD_BITSIZE = 5
     PACK_FIELD_MASK = (1 << PACK_FIELD_BITSIZE) - 1
+    TOKEN_NAME = "Alvara NFT"
 
-    def __init__(self, keeper, state):
+    def __init__(self, keeper, state, domain, normal_path, high_path):
         self.keeper = keeper
         self.state = state
+        self.normal_image_url = domain + normal_path
+        self.high_image_url = domain + high_path
 
     class TokenData:
         def __init__(self):
@@ -73,8 +76,8 @@ class MetaGenerator:
     def _metadata_json(self, data, image_path):
         return {
             'description': self._category_description(data.category_id),
-            'image': "127.0.0.1:8080/image/normal/" + str(data.token_id),
-            'name': 'Alvara',
+            'image': self.normal_image_url + str(data.token_id),
+            'name': self.TOKEN_NAME,
             'attributes': self._attributes_set(data)
         }
 
@@ -96,8 +99,7 @@ class MetaGenerator:
     async def meta(self, token_id):
         content = None
         internal_id = token_id - 1
-        await self.state.locks[internal_id].acquire()
-        try:
+        async with self.state.locks[internal_id]:
             if self.state.tokens[internal_id].state == token_state.TokenState.Token.NOT_EXIST:
                 # Ask smart contract about token 'token_id'
                 # call getData(num) of smart contract, and receive 'genome_str'
@@ -121,9 +123,7 @@ class MetaGenerator:
                     self.keeper.create_meta(token_id, content)
                     self.state.dump_token_state(token_id)
                 else:
-                    content = self.keeper.meta_content(token_id)
+                    content = self.keeper.token_meta_content(token_id)
             elif self.state.tokens[internal_id].state == token_state.TokenState.Token.REROLLED:
-                content = self.keeper.meta_content(token_id)
-        finally:
-            self.state.locks[internal_id].release()
-        return content
+                content = self.keeper.token_meta_content(token_id)
+            return content
