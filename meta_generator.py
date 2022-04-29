@@ -9,9 +9,10 @@ class MetaGenerator:
     PACK_FIELD_MASK = (1 << PACK_FIELD_BITSIZE) - 1
     TOKEN_NAME = "Alvara NFT"
 
-    def __init__(self, keeper, state, domain, normal_path, high_path):
+    def __init__(self, keeper, state, smart, domain, normal_path, high_path):
         self.keeper = keeper
         self.state = state
+        self.smart = smart
         self.normal_image_url = domain + normal_path
         self.high_image_url = domain + high_path
 
@@ -27,31 +28,32 @@ class MetaGenerator:
         result = self.TokenData()
         result.token_id = token_id
 
-        # get reroll flag
-        result.rerolled = num & 0b1
-        num = num >> 1
-
-        # get random category id
-        result.category_id = (num & self.PACK_FIELD_MASK) // 2
-        num = num >> self.PACK_FIELD_BITSIZE
-
         # get options
         result.options = [0] * self.ATTR_COUNT
         for i in range(0, self.ATTR_COUNT):
             result.options[i] = num & self.PACK_FIELD_MASK
             num = num >> self.PACK_FIELD_BITSIZE
+        result.options.reverse()
+
+        # get random category id
+        result.category_id = (num & self.PACK_FIELD_MASK) // 2
+        num = num >> self.PACK_FIELD_BITSIZE
+
+        # get reroll flag
+        result.rerolled = num & 0b1
+        num = num >> 1
         return result
 
     def _category_description(self, category_id):
-        if category_id == 1:
+        if category_id == 0:
             description = 'The category includes 4,500 photos. It’s focused on not related to time or place everyday moments of Alvara’s life. Generally, she led a quiet, measured life at that time, so she was dressed in the typical clothes of that time and place.'
-        elif category_id == 2:
+        elif category_id == 1:
             description = 'The category includes 2,500 photos. This group reveals a little more of Alvara’s feminine side. Any couturier in the Commonwealth of Planets would envy such a collection of lingerie. Alvara is said to have a separate room in her home for such clothes.'
-        elif category_id == 3:
+        elif category_id == 2:
             description = 'The category consists of 2,000 photos. There were large-scale wars before and, not surprisingly, even after the war with the Iguns. Alvara has been involved in many, many wars. This category contains photos of her service as a common private soldier.'
-        elif category_id == 4:
+        elif category_id == 3:
             description = 'The category contains 900 photos. Alvara was sometimes bored of being an ordinary soldier. She could demonstrate her leadership and fighting skills, which instantly brought her to the forefront of military conflict. People trusted her to take command of another elite squad to solve problems of high complexity. This kind of squad had state-of-the-art equipment.'
-        elif category_id == 5:
+        elif category_id == 4:
             description = 'The category has 100 photos. To be the most powerful entity of the Commonwealth of Planets and not take full advantage of it, at least locally in some lost corner of the galaxy, no, that’s not about Alvara. There were times when she wanted to be the center of attention. To turn the tide of a lost war on her own. To find a backward planet and, like Prometheus, give them the flame of genuine knowledge. Alvara, in these photos, is like a Greek goddess of war, enlightenment, or wisdom.'
         else:
             # TODO: important to catch and process this exception
@@ -94,7 +96,7 @@ class MetaGenerator:
         return result
 
     def _ask_smart_for_token_data(self, num):
-        return str(self.___temp_gen_pack())
+        return self.smart.get_token_data(num)
 
     async def meta(self, token_id):
         content = None

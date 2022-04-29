@@ -13,7 +13,7 @@ class Server:
     PORT = 8080
     KEEPALIVE_TIMEOUT = 60 #sec
     ETH_NODE_URL = "http://127.0.0.1:8545"
-    SMART_CONTRACT_ADDRESS = "0xCfEB869F69431e42cdB54A4F4f105C19C080A601"
+    SMART_CONTRACT_ADDRESS = "0xaD888d0Ade988EbEe74B8D4F39BF29a8d0fe8A8D"
     STATE_DIR = "state/"
     COLLECTION_SIZE = 10000
     DOMAIN = "alvara.io/"
@@ -25,7 +25,7 @@ class Server:
         self.keeper = artifacts_keeper.ArtifactsKeeper(self.ARTIFACTS_DIRECTORY, self.COLLECTION_SETTINGS_PATH)
         self.smart = smart_client.SmartContract(self.ETH_NODE_URL, self.SMART_CONTRACT_ADDRESS)
         self.state = token_state.TokenState(self.ARTIFACTS_DIRECTORY + self.STATE_DIR, self.COLLECTION_SIZE)
-        self.gen = meta_generator.MetaGenerator(self.keeper, self.state, self.DOMAIN,
+        self.gen = meta_generator.MetaGenerator(self.keeper, self.state, self.smart, self.DOMAIN,
                                                 self.NORMAL_IMAGE_PATH, self.HIGH_IMAGE_PATH)
         self.app = web.Application()
         self.app.add_routes([web.get("/" + self.TOKEN_META_PATH + "{id}", self.token_meta),

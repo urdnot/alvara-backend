@@ -14,5 +14,5 @@ class SmartContract:
 
         self.alvara = self.w3.eth.contract(address=self.address, abi=self.abi)
 
-    def get_token_data(self):
-        return self.alvara.functions.getMagic().call()
+    def get_token_data(self, token_id):
+        return self.alvara.functions.getData(token_id).call()
