@@ -3,7 +3,7 @@ from PIL import Image
 
 def _sort_layers(layers):
     def layers_sort_func(o):
-        return o['z']
+        return int(o['z'])
     layers.sort(key=layers_sort_func)
 
 

@@ -1,20 +1,19 @@
-# TODO: should be deleted
-import random
 import token_state
+import threading
 
 
 class MetaGenerator:
     ATTR_COUNT = 7
     PACK_FIELD_BITSIZE = 5
     PACK_FIELD_MASK = (1 << PACK_FIELD_BITSIZE) - 1
-    TOKEN_NAME = "Alvara NFT"
+    TOKEN_NAME = "Alvara #"
 
-    def __init__(self, keeper, state, smart, domain, normal_path, high_path):
+    def __init__(self, keeper, state, smart, domain, image_path, external_path):
         self.keeper = keeper
         self.state = state
         self.smart = smart
-        self.normal_image_url = domain + normal_path
-        self.high_image_url = domain + high_path
+        self.image_url = domain + image_path
+        self.external_url = domain + external_path
 
     class TokenData:
         def __init__(self):
@@ -75,57 +74,50 @@ class MetaGenerator:
             })
         return result
 
-    def _metadata_json(self, data, image_path):
+    def _metadata_json(self, data):
         return {
             'description': self._category_description(data.category_id),
-            'image': self.normal_image_url + str(data.token_id),
-            'name': self.TOKEN_NAME,
+            'image': self.image_url + str(data.token_id),
+            'name': self.TOKEN_NAME + str(data.token_id),
+            'external_url': self.external_url + str(data.token_id),
             'attributes': self._attributes_set(data)
         }
 
-    def ___temp_gen_pack(self):
-        OPTION_SIZES = [5, 1, 5, 3, 8, 6, 5]
-        result = 0
-        for sz in reversed(OPTION_SIZES):
-            result = result << 5
-            result = result | random.randint(0, sz - 1)
-        result = result << 5
-        result = result | (2 + random.randint(0, 1))
-        result = result << 1
-        result = result | random.randint(0, 1)
-        return result
-
-    def _ask_smart_for_token_data(self, num):
+    async def _ask_smart_for_token_data(self, num):
         return self.smart.get_token_data(num)
+
+    async def _create_artifacts(self, data, token_id):
+        await self.keeper.create_image(data)
+        content = self._metadata_json(data)
+        await self.keeper.create_meta(token_id, content)
+        await self.state.dump_token_state(token_id)
+        t = threading.Thread(target=self.keeper.create_external, args=(data,))
+        t.daemon = True
+        t.start()
+        return content
 
     async def meta(self, token_id):
         content = None
-        internal_id = token_id - 1
-        async with self.state.locks[internal_id]:
-            if self.state.tokens[internal_id].state == token_state.TokenState.Token.NOT_EXIST:
+        async with self.state.locks[token_id]:
+            if self.state.tokens[token_id].state == token_state.TokenState.Token.NOT_EXIST:
                 # Ask smart contract about token 'token_id'
                 # call getData(num) of smart contract, and receive 'genome_str'
-                self.state.tokens[internal_id].data = self._ask_smart_for_token_data(token_id)
-                unpacked_data = self._unpack_token_data(self.state.tokens[internal_id].data, token_id)
-                self.state.tokens[internal_id].state = token_state.TokenState.Token.NOT_REROLLED if unpacked_data.rerolled == 0 else token_state.TokenState.Token.REROLLED
-                normal = self.keeper.create_images(unpacked_data)
-                content = self._metadata_json(unpacked_data, normal)
-                self.keeper.create_meta(token_id, content)
-                self.state.dump_token_state(token_id)
-            elif self.state.tokens[internal_id].state == token_state.TokenState.Token.NOT_REROLLED:
+                self.state.tokens[token_id].data = await self._ask_smart_for_token_data(token_id)
+                unpacked_data = self._unpack_token_data(self.state.tokens[token_id].data, token_id)
+                self.state.tokens[token_id].state = token_state.TokenState.Token.NOT_REROLLED if unpacked_data.rerolled == 0 else token_state.TokenState.Token.REROLLED
+                content = await self._create_artifacts(unpacked_data, token_id)
+
+            elif self.state.tokens[token_id].state == token_state.TokenState.Token.NOT_REROLLED:
                 # Ask smart contract about token 'token_id'
                 # call getData(num) of smart contract, and receive 'genome_str'
-                data_str = self._ask_smart_for_token_data(token_id)
+                data_str = await self._ask_smart_for_token_data(token_id)
                 if data_str != self.state.tokens[token_id].data:
-                    self.state.tokens[internal_id].data = data_str
+                    self.state.tokens[token_id].data = data_str
                     data = self._unpack_token_data(data_str, token_id)
-                    self.state.tokens[internal_id].state = token_state.TokenState.Token.REROLLED
-                    normal = self.keeper.create_images(data)
-                    content = self._metadata_json(data, normal)
-                    self.keeper.create_meta(token_id, content)
-                    self.state.dump_token_state(token_id)
+                    self.state.tokens[token_id].state = token_state.TokenState.Token.REROLLED
+                    content = await self._create_artifacts(data, token_id)
                 else:
-                    content = self.keeper.token_meta_content(token_id)
-            elif self.state.tokens[internal_id].state == token_state.TokenState.Token.REROLLED:
-                content = self.keeper.token_meta_content(token_id)
+                    content = await self.keeper.token_meta_content(token_id)
+            elif self.state.tokens[token_id].state == token_state.TokenState.Token.REROLLED:
+                content = await self.keeper.token_meta_content(token_id)
             return content

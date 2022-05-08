@@ -1,5 +1,7 @@
 {
   "assets_path": "alvara_assets",
+  "image": 350,
+  "external": 3000,
   "categories": [
     {
       "name": "cool",

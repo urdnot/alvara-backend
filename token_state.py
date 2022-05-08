@@ -38,9 +38,8 @@ class TokenState:
                 self.tokens[i].state = content['state']
                 self.tokens[i].data = content['data']
 
-    def dump_token_state(self, token_id):
-        internal_id = token_id - 1
+    async def dump_token_state(self, token_id):
         utils.save_safely({
-            'state': self.tokens[internal_id].state,
-            'data': self.tokens[internal_id].data
+            'state': self.tokens[token_id].state,
+            'data': self.tokens[token_id].data
         }, self.dir + str(token_id))

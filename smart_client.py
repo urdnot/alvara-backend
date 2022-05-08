@@ -16,3 +16,6 @@ class SmartContract:
 
     def get_token_data(self, token_id):
         return self.alvara.functions.getData(token_id).call()
+
+    def get_total_supply(self):
+        return self.alvara.functions.totalSupply().call()
